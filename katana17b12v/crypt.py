@@ -5,20 +5,11 @@ from cryptography.fernet import Fernet
 def main():
     parser = argparse.ArgumentParser(description="Secret sync via .aes")
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--init", action="store_true", help="Generate local .aes key file")
     group.add_argument("--encrypt", action="store_true")
     group.add_argument("--decrypt", action="store_true")
     args = parser.parse_args()
 
     salt_path = Path(__file__).parent / ".aes"
-
-    if args.init:
-        phrase = input("Enter pass-phrase for this device: ").strip()
-        if not phrase:
-            raise SystemExit("Error: Pass-phrase cannot be empty!")
-        salt_path.write_text(phrase + "\n")
-        print(f"Successfully saved key to {salt_path}")
-        return
 
     if not salt_path.exists():
         raise SystemExit(f"Error: Key file {salt_path} not found!")
