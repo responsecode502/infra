@@ -125,24 +125,28 @@ def do_chroot(c):
 @task(pre=[set_root_password])
 def setup_btrbk(c):
     logger.info("phase 5: setup btrbk", step = "start")
-    xbps_init_script = f"""
-SSL_NO_VERIFY=1 xbps-install -S --yes
-
+    xbps_init_script = (
+        """SSL_NO_VERIFY=1 xbps-install -S --yes
 xbps-install -u xbps --yes
-
 xbps-install btrbk --yes
 
 mkdir -p /etc/btrbk
 cat << 'EOF' > /etc/btrbk/btrbk.conf
-{BTRBK}
+"""
+        + BTRBK
+        + """
 EOF
 
 mkdir -p /mnt/btrfs-root
-mount -o subvolid=5 {PART_ROOT} /mnt/btrfs-root
+mount -o subvolid=5 """
+        + PART_ROOT
+        + """ /mnt/btrfs-root
 btrfs subvolume snapshot /mnt/btrfs-root/@ /mnt/btrfs-root/@snapshots/@.pure_system
 btrfs subvolume snapshot /mnt/btrfs-root/@home /mnt/btrfs-root/@snapshots/@home.pure_system
 umount /mnt/btrfs-root
 """
+    )
+
 
     c.sudo(f"chroot {MNT} bash", input=xbps_init_script, pty=True)
     c.sudo(f"umount -R {MNT}")
