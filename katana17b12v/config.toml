@@ -15,7 +15,7 @@ fstab = '''
 tmpfs /tmp tmpfs defaults,nosuid,nodev 0 0
 UUID={root_uuid} / btrfs noatime,compress=zstd:1,ssd,discard=async,subvol=@ 0 0
 UUID={root_uuid} /home btrfs noatime,compress=zstd:1,ssd,discard=async,subvol=@home 0 0
-UUID={root_uuid} /snapshots btrfs noatime,compress=zstd:1,ssd,discard=async,subvol=@snapshots 0 0
+UUID={root_uuid} /.snapshots btrfs noatime,compress=zstd:1,ssd,discard=async,subvol=@snapshots 0 0
 UUID={root_uuid} /mnt/btrfs-root btrfs noatime,subvolid=5 0 0
 UUID={efi_uuid} /boot/efi vfat defaults,noatime 0 2
 '''
