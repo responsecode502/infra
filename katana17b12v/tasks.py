@@ -128,7 +128,7 @@ def setup_btrbk(c):
     
     in_chroot = f"chroot {MNT}"
 
-    # 1. Построчное обновление и установка внутри chroot
+    # 1. Построчное обновление и установка пакета
     logger.info("phase 5: sync repos and upgrade xbps")
     c.sudo(f"{in_chroot} xbps-install -S -y", pty=True)
     c.sudo(f"{in_chroot} xbps-install -u xbps -y", pty=True)
@@ -136,33 +136,33 @@ def setup_btrbk(c):
     logger.info("phase 5: install btrbk snapshot manager package")
     c.sudo(f"{in_chroot} xbps-install btrbk -y", pty=True)
 
-    # 2. Создаем директорию под конфиг (снаружи chroot, прямо на примонтированном диске)
+    # 2. Создаем директорию под конфиг
     c.sudo(f"mkdir -p {MNT}/etc/btrbk")
     
-    # 3. Запись btrbk.conf БЕЗ tee и БЕЗ echo через чистый cat с аргументом input самого Invoke
-    # Это нативно передает данные из переменной BTRBK прямо в файл от имени root
+    # 3. Запись btrbk.conf через каноничный cat << 'EOF'
     logger.info("phase 5: writing btrbk.conf straight to target storage")
-    c.sudo(f"bash -c 'cat > {MNT}/etc/btrbk/btrbk.conf'", input=BTRBK)
+    c.sudo(f"bash -c \"cat << 'EOF' > {MNT}/etc/btrbk/btrbk.conf\n{BTRBK}\nEOF\"")
 
-    # 4. Создаем точки монтирования и делаем снапшоты (снаружи chroot через прямые пути)
+    # 4. Монтирование корня диска и создание снапшотов чистой системы
     logger.info("phase 5: freezing layout into immutable pure_system snapshots")
     btrfs_root_path = f"{MNT}/mnt/btrfs-root"
     
     c.sudo(f"mkdir -p {btrfs_root_path}")
     c.sudo(f"mount -o subvolid=5 {PART_ROOT} {btrfs_root_path}")
     
-    # Делаем слепки чистой системы по твоим проверенным путям
+    # Делаем слепки чистой системы (используем @snapshots, как на Фазе 1)
     c.sudo(f"btrfs subvolume snapshot -r {btrfs_root_path}/@ {btrfs_root_path}/@snapshots/@.pure_system", pty=True)
     c.sudo(f"btrfs subvolume snapshot -r {btrfs_root_path}/@home {btrfs_root_path}/@snapshots/@home.pure_system", pty=True)
     
-    # Размонтируем корень диска
+    # Чисто размонтируем корень за собой
     c.sudo(f"umount {btrfs_root_path}")
 
     # 5. ФИНАЛЬНЫЙ СНОС ВСЕЙ ИЕРАРХИИ ДИСКА (Закрываем установку Катаны)
     logger.info("phase 5: installation sealed, tearing down target system layout tree mounts")
     c.sudo(f"umount -R {MNT}")
     
-    logger.info("phase 5: setup btrbk", step = "finish")    
+    logger.info("phase 5: setup btrbk", step = "finish")
+
 
 @task
 def finalize(c):
