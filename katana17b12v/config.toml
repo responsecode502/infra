@@ -22,7 +22,7 @@ UUID={efi_uuid} /boot/efi vfat defaults,noatime 0 2
 
 btrbk = '''
 timestamp_format long
-snapshot_dir /snapshots
+snapshot_dir /.snapshots
 snapshot_preserve_min latest
 snapshot_preserve 14d 4w 12m
 
