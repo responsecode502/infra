@@ -96,7 +96,7 @@ def do_chroot(c):
     c.sudo(f"{in_chroot} bash -c 'echo {HOSTNAME} > /etc/hostname'")
     c.sudo(f"{in_chroot} bash -c 'echo \"LANG=en_US.UTF-8\" > /etc/locale.conf'")
     c.sudo(f"{in_chroot} bash -c 'echo \"en_US.UTF-8 UTF-8\" >> /etc/default/libc-locales'")
-    c.sudo(f"{in_chroot} xbps_reconfigure -f glibc-locales", pty=True)
+    c.sudo(f"{in_chroot} xbps-reconfigure -f glibc-locales", pty=True)
     c.sudo(f"{in_chroot} ln -sf /usr/share/zoneinfo/{TIMEZONE} /etc/localtime")
 
     _response = f"{os.getenv('ROOT_PASSWORD')}\n"
