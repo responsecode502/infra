@@ -8,6 +8,7 @@ dependencies = [
     "invoke==2.2.0",
     "cryptography==44.0.1",
     "python-dotenv==1.0.1",
+    "structlog==25.1.0",
 ]
 
 [tool.uv]
