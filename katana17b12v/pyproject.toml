@@ -3,8 +3,16 @@ name = "katana17b12v"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = []
+requires-python = "==3.12.*"
+dependencies = [
+    "invoke==2.2.0",
+    "cryptography==44.0.1",
+    "python-dotenv==1.0.1",
+]
+
+[tool.uv]
+managed = true
+package = false
 
 [tool.pyright]
 venvPath = "."
