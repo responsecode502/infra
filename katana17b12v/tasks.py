@@ -108,26 +108,70 @@ def do_chroot(c):
         watchers=[pass_responder, retry_responder], 
         pty=True
     )
-
-    root_uuid = os.popen(f"blkid -o value -s UUID {PART_ROOT}").read().strip()
-    efi_uuid = os.popen(f"blkid -o value -s UUID {PART_EFI}").read().strip()
+    
+    root_uuid = c.sudo(f"blkid -o value -s UUID {PART_ROOT}", hide=True).stdout.strip()
+    efi_uuid = c.sudo(f"blkid -o value -s UUID {PART_EFI}", hide=True).stdout.strip()
+    
     fstab_text = FSTAB.format(root_uuid=root_uuid, efi_uuid=efi_uuid)
-    Path(f"{MNT}/etc/fstab").write_text(fstab_text)
+    c.sudo(f"bash -c \"cat << 'EOF' > {MNT}/etc/fstab\n{fstab_text}\nEOF\"")
 
     c.sudo(f"{in_chroot} bash -c 'echo \"GRUB_DISABLE_OS_PROBER=false\" >> /etc/default/grub'")
     c.sudo(f"{in_chroot} grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=void --recheck", pty=True)
     c.sudo(f"{in_chroot} xbps-reconfigure -fa", pty=True)
-    c.sudo(f"umount -R {MNT}")
+    #c.sudo(f"umount -R {MNT}")
     
     logger.info("phase 4: chroot", step = "finish")
 
+@task(pre=[set_root_password])
+def setup_btrbk(c):
+    logger.info("phase 5: setup btrbk", step = "start")
+    xbps_init_script = f"""
+SSL_NO_VERIFY=1 xbps-install -S --yes
 
-@task(pre = [
-    #  set_root_password,
-    #  do_partitioning,
-    #  do_mounting_layout,
-    #  do_bootstrap,
-    #  do_chroot,
-  ])
+xbps-install -u xbps --yes
+
+xbps-install btrbk --yes
+
+mkdir -p /etc/btrbk
+cat << 'EOF' > /etc/btrbk/btrbk.conf
+{BTRBK}
+EOF
+
+mkdir -p /mnt/btrfs-root
+mount -o subvolid=5 {PART_ROOT} /mnt/btrfs-root
+btrfs subvolume snapshot /mnt/btrfs-root/@ /mnt/btrfs-root/@snapshots/@.pure_system
+btrfs subvolume snapshot /mnt/btrfs-root/@home /mnt/btrfs-root/@snapshots/@home.pure_system
+umount /mnt/btrfs-root
+"""
+
+    c.sudo(f"chroot {MNT} bash", input=xbps_init_script, pty=True)
+    c.sudo(f"umount -R {MNT}")
+    
+    logger.info("phase 5: setup btrbk", step = "finish")
+
+    
+
+@task
+def finalize(c):
+    logger.info("Process finished! Rebooting in 10 seconds...")
+
+    import time
+    for _ in range(20):
+        time.sleep(0.5)
+    c.sudo("reboot")
+
+@task(
+    pre = [
+        set_root_password,
+        do_partitioning,
+        do_mounting_layout,
+        do_bootstrap,
+        do_chroot,
+        setup_btrbk
+    ],
+    post = [
+        finalize
+    ]
+)
 def setup_system(c):
     pass
