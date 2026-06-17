@@ -41,4 +41,5 @@ echo "using profile: $target_dir"
 
 # Move to the direcroty of chosen device
 cd "${target_dir}"
+uv run python crypt.py --decrypt
 uv run inv setup-system

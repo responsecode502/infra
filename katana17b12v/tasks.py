@@ -18,7 +18,6 @@ TEMPLATES = config["templates"]
 
 load_dotenv(dotenv_path = BASE_DIR / ".env")
 
-
-@task
+@task()
 def setup_system(c):
     print("Hello from uv run inv setup-system")
