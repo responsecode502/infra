@@ -1,6 +1,14 @@
 [hardware]
 part_efi = "/dev/nvme0n1p1"
 part_root = "/dev/nvme0n1p3"
+mnt = "/mnt"
+
+[repos]
+xbps = "https://repo-default.voidlinux.org/current"
+
+[system]
+hostname = "void-katana"
+timezone = "Europe/Moscow"
 
 [templates]
 fstab = '''
