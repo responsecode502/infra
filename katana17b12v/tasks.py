@@ -23,7 +23,7 @@ load_dotenv(dotenv_path = BASE_DIR / ".env")
 
 @task
 def set_root_password(c):
-    if not (password := os.os.getenv("ROOT_PASSWORD")):
+    if not (password := os.getenv("ROOT_PASSWORD")):
         raise Exit("ROOT_PASSWORD missing", code = 1)
     logger.info("root password updated")
     c.config.update({"sudo" : {"password" : password}})
