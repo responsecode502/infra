@@ -22,6 +22,7 @@ xbps-install -u xbps --yes
 
 # Install deploy dependencies
 xbps-install curl --yes
+
 if [ -x "/usr/local/bin/uv" ]; then
     echo "uv already installed"
 else
@@ -36,5 +37,8 @@ if [ ! -d "$target_dir" ]; then
   exit 1
 fi
 
-echo "Из файла .device успешно прочитан профиль: $target_dir"
+echo "using profile: $target_dir"
+
+# Move to the direcroty of chosen device
+cd "${target_dir}"
 
