@@ -76,7 +76,7 @@ def do_bootstrap(c):
     bootstrap_commands = [
         f"mkdir -p {MNT}/var/db/xbps/keys",
         f"cp -R /var/db/xbps/keys/* {MNT}/var/db/xbps/keys/",
-        f"xbps-install -R {XBPS_REPO} -r {MNT} {' '.join(BOOTSTRAP_PACKAGES)} --yes"
+        f"xbps-install -S -y -R {XBPS_REPO} -r {MNT} {' '.join(BOOTSTRAP_PACKAGES)}"
     ]
     for cmd in bootstrap_commands:
         c.sudo(cmd, pty=True)
