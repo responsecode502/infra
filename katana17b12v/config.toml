@@ -1,0 +1,24 @@
+[hardware]
+part_efi = "/dev/nvme0n1p1"
+part_root = "/dev/nvme0n1p3"
+
+[templates]
+fstab = '''
+tmpfs /tmp tmpfs defaults,nosuid,nodev 0 0
+UUID={root_uuid} / btrfs noatime,compress=zstd:1,ssd,discard=async,subvol=@ 0 0
+UUID={root_uuid} /home btrfs noatime,compress=zstd:1,ssd,discard=async,subvol=@home 0 0
+UUID={root_uuid} /snapshots btrfs noatime,compress=zstd:1,ssd,discard=async,subvol=@snapshots 0 0
+UUID={root_uuid} /mnt/btrfs-root btrfs noatime,subvolid=5 0 0
+UUID={efi_uuid} /boot/efi vfat defaults,noatime 0 2
+'''
+
+btrbk = '''
+timestamp_format long
+snapshot_dir /snapshots
+snapshot_preserve_min latest
+snapshot_preserve 14d 4w 12m
+
+volume /mnt/btrfs-root
+    subvolume @
+    subvolume @home
+'''
