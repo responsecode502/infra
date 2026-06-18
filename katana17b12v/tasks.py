@@ -57,7 +57,6 @@ def install_base(ctx):
         ctx.sudo(cmd, pty=True, hide=True)
     log.info("[3] installing base", step="finish")
 
-
 @task(pre=[set_root_password])
 def do_chroot(ctx):
     log.info("[4] chroot", step="start")
@@ -103,7 +102,6 @@ def do_chroot(ctx):
     ]:
         ctx.sudo(f"chroot {cfg.mnt} {cmd}", pty=True, hide=True)
     ctx.sudo(f"mkdir -p {cfg.mnt}/etc/btrbk", pty=True, hide=True)
-
     
     log.info("deploying btrbk")
     btrbk_src = Path(__file__).parent.resolve() / "system/etc/btrbk/btrbk.conf"
