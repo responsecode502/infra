@@ -28,4 +28,4 @@
 From the root repo directory, this can be done with:
 
 ```bash
-./select.sh && ./set-envkey.sh && sudo ./run.sh
+./select.sh your_profile_here && ./set-envkey.sh your_envkey_here && sudo ./run.sh
