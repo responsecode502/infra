@@ -1,6 +1,6 @@
 tmpfs /tmp tmpfs defaults,nosuid,nodev 0 0
-UUID={root_uuid} / btrfs noatime,compress=zstd:1,ssd,discard=async,subvol=@ 0 0
-UUID={root_uuid} /home btrfs noatime,compress=zstd:1,ssd,discard=async,subvol=@home 0 0
-UUID={root_uuid} /.snapshots btrfs noatime,compress=zstd:1,ssd,discard=async,subvol=@snapshots 0 0
-UUID={root_uuid} /mnt/btrfs-root btrfs noatime,subvolid=5 0 0
-UUID={efi_uuid} /boot/efi vfat defaults,noatime 0 2
+LABEL=ROOT_PART / btrfs noatime,compress=zstd:1,ssd,discard=async,subvol=@ 0 0
+LABEL=ROOT_PART /home btrfs noatime,compress=zstd:1,ssd,discard=async,subvol=@home 0 0
+LABEL=ROOT_PART /.snapshots btrfs noatime,compress=zstd:1,ssd,discard=async,subvol=@snapshots 0 0
+LABEL=ROOT_PART /mnt/btrfs-root btrfs noatime,subvolid=5 0 0
+LABEL=EFI_PART /boot/efi vfat defaults,noatime 0 2

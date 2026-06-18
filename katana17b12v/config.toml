@@ -1,0 +1,9 @@
+efi_pt = "/dev/nvme0n1p1"
+root_pt = "/dev/nvme0n1p3"
+mnt = "/mnt"
+xbps_repo = "https://repo-default.voidlinux.org/current"
+
+[system]
+hostname = "katana17b12v"
+timezone = "Europe/Moscow"
+
