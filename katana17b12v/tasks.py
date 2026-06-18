@@ -21,12 +21,12 @@ def set_root_password(ctx):
 @task(pre=[set_root_password])
 def do_partitioning(ctx):
     log.info("[1] partitioning", step="start")
-    ctx.sudo(f"mkfs.btrfs -f -L ROOT_PART {cfg.root_pt}", pty=True, hide=True)
-    ctx.sudo(f"fatlabel {cfg.efi_pt} EFI_PART", pty=True, hide=True)
+    ctx.sudo(f"mkfs.btrfs -f -L ROOT_PART {cfg.root_pt}", pty=True, hide=cfg.hide_output)
+    ctx.sudo(f"fatlabel {cfg.efi_pt} EFI_PART", pty=True, hide=cfg.hide_output)
     ctx.sudo(f"mount {cfg.root_pt} {cfg.mnt}")
     log.info("subvolumes are being created")
     for subvolume in ["@", "@home", "@snapshots"]:
-        ctx.sudo(f"btrfs subvolume create {cfg.mnt}/{subvolume}", pty=True, hide=True)
+        ctx.sudo(f"btrfs subvolume create {cfg.mnt}/{subvolume}", pty=True, hide=cfg.hide_output)
     ctx.sudo(f"umount {cfg.mnt}")
     log.info("[1] partitioning", step="finish")
 
@@ -41,7 +41,7 @@ def do_mounting_layout(ctx):
         f"mount -o {options},subvol=@snapshots {cfg.root_pt} {cfg.mnt}/.snapshots",
         f"mount {cfg.efi_pt} {cfg.mnt}/boot/efi"
     ]:
-        ctx.sudo(cmd, pty=True, hide=True)
+        ctx.sudo(cmd, pty=True, hide=cfg.hide_output)
     log.info("[2] mounting layout", step="finish") 
 
 @task(pre=[set_root_password])
@@ -54,7 +54,7 @@ def install_base(ctx):
         f"xbps-install -S -y -R {cfg.xbps_repo} -r {cfg.mnt} {' '.join(BOOTSTRAP_PACKAGES)}"
     ]
     for cmd in bootstrap_commands:
-        ctx.sudo(cmd, pty=True, hide=True)
+        ctx.sudo(cmd, pty=True, hide=cfg.hide_output)
     log.info("[3] installing base", step="finish")
 
 @task(pre=[set_root_password])
@@ -73,7 +73,7 @@ def do_chroot(ctx):
         f"xbps-reconfigure -f glibc-locales",
         f"ln -sf /usr/share/zoneinfo/{cfg.system.timezone} /etc/localtime"
     ]:
-        ctx.sudo(f"chroot {cfg.mnt} {cmd}", pty=True, hide=True)
+        ctx.sudo(f"chroot {cfg.mnt} {cmd}", pty=True, hide=cfg.hide_output)
 
     log.info("setting root password")
     pass_responder = Responder(pattern=r"New password:", response=f"{cfg.ROOT_PASSWORD}\n")
@@ -83,7 +83,7 @@ def do_chroot(ctx):
         f"chroot {cfg.mnt} passwd root", 
         watchers=[pass_responder, retry_responder], 
         pty=True,
-        hide=True
+        hide=cfg.hide_output
     )
 
     log.info("deploying fstab")
@@ -100,8 +100,8 @@ def do_chroot(ctx):
         "xbps-install -u xbps --yes",
         "xbps-install btrbk --yes"
     ]:
-        ctx.sudo(f"chroot {cfg.mnt} {cmd}", pty=True, hide=True)
-    ctx.sudo(f"mkdir -p {cfg.mnt}/etc/btrbk", pty=True, hide=True)
+        ctx.sudo(f"chroot {cfg.mnt} {cmd}", pty=True, hide=cfg.hide_output)
+    ctx.sudo(f"mkdir -p {cfg.mnt}/etc/btrbk", pty=True, hide=cfg.hide_output)
     
     log.info("deploying btrbk")
     btrbk_src = Path(__file__).parent.resolve() / "system/etc/btrbk/btrbk.conf"
@@ -119,7 +119,7 @@ def do_chroot(ctx):
         f"umount {btrfs_root_path}",
         f"umount -R {cfg.mnt}"
     ]:
-        ctx.sudo(cmd, pty=True, hide=True)
+        ctx.sudo(cmd, pty=True, hide=cfg.hide_output)
         
     log.info("[4] chroot", step="finish")
 
