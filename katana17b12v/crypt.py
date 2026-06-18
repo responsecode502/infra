@@ -10,7 +10,7 @@ def main():
     group.add_argument("--decrypt", action="store_true")
     args = parser.parse_args()
 
-    salt_path = Path(__file__).parent.parent / ".envkey"
+    salt_path = Path(__file__).parent / ".envkey"
 
     if not salt_path.exists():
         raise SystemExit("env key not found")
