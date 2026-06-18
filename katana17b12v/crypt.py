@@ -26,7 +26,7 @@ def main():
             Path(".env").write_bytes(fernet.decrypt(Path(".env.enc").read_bytes()))
             print(".env.enc -> .env")
     except Exception as e:
-        raise SystemExit(f"error: {e}")
+        raise SystemExit(f"crypt error: {e}")
 
     
 if __name__ == "__main__":
