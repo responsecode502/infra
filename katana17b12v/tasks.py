@@ -75,7 +75,8 @@ def do_chroot(ctx):
         f"ln -sf /usr/share/zoneinfo/{cfg.system.timezone} /etc/localtime"
     ]:
         ctx.sudo(f"chroot {cfg.mnt} {cmd}", pty=True, hide=True)
-    
+
+    log.info("setting root password")
     pass_responder = Responder(pattern=r"New password:", response=f"{cfg.ROOT_PASSWORD}\n")
     retry_responder = Responder(pattern=r"Retype new password:", response=f"{cfg.ROOT_PASSWORD}\n")
 
@@ -85,19 +86,60 @@ def do_chroot(ctx):
         pty=True,
         hide=True
     )
+
+    log.info("deploying fstab")
+    fstab_src = Path(__file__).parent.resolve() / "system/etc/fstab"
+    ctx.sudo(f"cp {fstab_src} {cfg.mnt}/etc/fstab")
+
+    log.info("configuring grub and btrbk")
+    for cmd in [ 
+        f"bash -c 'echo \"GRUB_DISABLE_OS_PROBER=false\" >> /etc/default/grub'",
+        f"grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=void --recheck",
+        f"xbps-reconfigure -fa",
+
+        "xbps-install -S --yes",
+        "xbps-install -u xbps --yes",
+        "xbps-install btrbk --yes"
+    ]:
+        ctx.sudo(f"chroot {cfg.mnt} {cmd}", pty=True, hide=True)
+    ctx.sudo(f"mkdir -p {cfg.mnt}/etc/btrbk", pty=True, hide=True)
+
     
-    root_uuid = c.sudo(f"blkid -o value -s UUID {PART_ROOT}", hide=True).stdout.strip()
-    efi_uuid = c.sudo(f"blkid -o value -s UUID {PART_EFI}", hide=True).stdout.strip()
-    
-    fstab_text = FSTAB.format(root_uuid=root_uuid, efi_uuid=efi_uuid)
-    c.sudo(f"bash -c \"cat << 'EOF' > {MNT}/etc/fstab\n{fstab_text}\nEOF\"")
+    log.info("deploying btrbk")
+    btrbk_src = Path(__file__).parent.resolve() / "system/etc/btrbk/btrbk.conf"
+    ctx.sudo(f"mkdir -p {cfg.mnt}/etc/btrbk")
+    ctx.sudo(f"cp {btrbk_src} {cfg.mnt}/etc/btrbk/btrbk.conf")
 
-    c.sudo(f"{in_chroot} bash -c 'echo \"GRUB_DISABLE_OS_PROBER=false\" >> /etc/default/grub'")
-    c.sudo(f"{in_chroot} grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=void --recheck", pty=True)
-    c.sudo(f"{in_chroot} xbps-reconfigure -fa", pty=True)
-    #c.sudo(f"umount -R {MNT}")
-    
-    logger.info("phase 4: chroot", step = "finish")
+    btrfs_root_path = f"{cfg.mnt}/mnt/btrfs-root"
 
+    log.info("creating pure_system snapshot")
+    for cmd in [
+        f"mkdir -p {btrfs_root_path}",
+        f"mount -o subvolid=5 {cfg.root_pt} {btrfs_root_path}",
+        f"btrfs subvolume snapshot -r {btrfs_root_path}/@ {btrfs_root_path}/@snapshots/@.pure_system",
+        f"btrfs subvolume snapshot -r {btrfs_root_path}/@home {btrfs_root_path}/@snapshots/@home.pure_system",
+        f"umount {btrfs_root_path}",
+        f"umount -R {cfg.mnt}"
+    ]:
+        ctx.sudo(cmd, pty=True, hide=True)
+        
+    log.info("[4] chroot", step="finish")
 
+@task
+def do_poweroff(ctx):
+    ctx.sudo("poweroff")
 
+@task(
+    pre = [
+        set_root_password,
+        do_partitioning,
+        do_mounting_layout,
+        install_base,
+        do_chroot
+    ],
+    post = [
+        do_poweroff
+    ]
+)
+def setup_system(c):
+    pass
