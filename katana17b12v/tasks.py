@@ -130,6 +130,7 @@ def do_chroot(ctx):
         f"btrfs subvolume snapshot -r {btrfs_root_path}/@ {btrfs_root_path}/@snapshots/@.pure_system",
         f"btrfs subvolume snapshot -r {btrfs_root_path}/@home {btrfs_root_path}/@snapshots/@home.pure_system",
         f"chroot {cfg.mnt} grub-mkconfig -o /boot/grub/grub.cfg",
+        f'bash -c "echo \\"grub-mkconfig -o /boot/grub/grub.cfg\\" >> {cfg.mnt}/etc/rc.shutdown"',
         f"umount {btrfs_root_path}",
         f"umount -R {cfg.mnt}"
     ]:
