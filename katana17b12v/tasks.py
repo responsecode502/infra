@@ -5,6 +5,7 @@ from invoke import task
 from invoke.watchers import Responder
 
 SCRIPT_DIR = Path(__file__).parent
+
 log = structlog.get_logger()
 cfg = Dynaconf(
     root_path=SCRIPT_DIR,
@@ -16,14 +17,14 @@ cfg = Dynaconf(
 @task
 def set_root_password(ctx):
     ctx.config.update({"sudo" : {"password" : cfg.ROOT_PASSWORD}})
-    log.info("[0] root password updated")
+    log.info("[0] root password resolved")
 
 @task(pre=[set_root_password])
 def do_partitioning(ctx):
     log.info("[1] partitioning", step="start")
     ctx.sudo(f"mkfs.btrfs -f -L ROOT_PART {cfg.root_pt}", pty=True, hide=cfg.hide_output)
     ctx.sudo(f"fatlabel {cfg.efi_pt} EFI_PART", pty=True, hide=cfg.hide_output)
-    ctx.sudo(f"mount {cfg.root_pt} {cfg.mnt}")
+    ctx.sudo(f"mount {cfg.root_pt} {cfg.mnt}", pty=True, hide=cfg.hide_output)
     log.info("subvolumes are being created")
     for subvolume in ["@", "@home", "@snapshots"]:
         ctx.sudo(f"btrfs subvolume create {cfg.mnt}/{subvolume}", pty=True, hide=cfg.hide_output)
@@ -47,13 +48,18 @@ def do_mounting_layout(ctx):
 @task(pre=[set_root_password])
 def install_base(ctx):
     log.info("[3] installing base", step="start")
-    BOOTSTRAP_PACKAGES = ["base-system", "btrfs-progs", "grub-x86_64-efi", "os-prober", "grub-btrfs", "grub-btrfs-runit"]
-    bootstrap_commands = [
+    BOOTSTRAP_PACKAGES = [
+        "base-system",
+        "btrfs-progs",
+        "grub-x86_64-efi",
+        "os-prober",
+        "grub-btrfs"
+    ]
+    for cmd in [
         f"mkdir -p {cfg.mnt}/var/db/xbps/keys",
         f"cp -R /var/db/xbps/keys/* {cfg.mnt}/var/db/xbps/keys/",
         f"xbps-install -S -y -R {cfg.xbps_repo} -r {cfg.mnt} {' '.join(BOOTSTRAP_PACKAGES)}"
-    ]
-    for cmd in bootstrap_commands:
+    ]:
         ctx.sudo(cmd, pty=True, hide=cfg.hide_output)
     log.info("[3] installing base", step="finish")
 
@@ -88,11 +94,12 @@ def do_chroot(ctx):
 
     log.info("deploying rollback script")
     ctx.sudo(f"mkdir -p {cfg.mnt}/usr/bin")
-    ctx.sudo(f"cp -a system/usr/bin/rollback {cfg.mnt}/usr/bin/rollback")
+    rollback_script_src = SCRIPT_DIR.resolve() / "system/usr/bin/rollback"
+    ctx.sudo(f"cp -a {rollback_script_src} {cfg.mnt}/usr/bin/rollback")
     ctx.sudo(f"chmod +x {cfg.mnt}/usr/bin/rollback")
 
     log.info("deploying fstab")
-    fstab_src = Path(__file__).parent.resolve() / "system/etc/fstab"
+    fstab_src = SCRIPT_DIR.resolve() / "system/etc/fstab"
     ctx.sudo(f"cp {fstab_src} {cfg.mnt}/etc/fstab")
 
     log.info("configuring grub and btrbk")
@@ -109,7 +116,7 @@ def do_chroot(ctx):
     ctx.sudo(f"mkdir -p {cfg.mnt}/etc/btrbk", pty=True, hide=cfg.hide_output)
     
     log.info("deploying btrbk")
-    btrbk_src = Path(__file__).parent.resolve() / "system/etc/btrbk/btrbk.conf"
+    btrbk_src = SCRIPT_DIR.resolve() / "system/etc/btrbk/btrbk.conf"
     ctx.sudo(f"mkdir -p {cfg.mnt}/etc/btrbk")
     ctx.sudo(f"cp {btrbk_src} {cfg.mnt}/etc/btrbk/btrbk.conf")
 
