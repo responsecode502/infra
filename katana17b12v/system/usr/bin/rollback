@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
-MNT_ROOT="/run/mount/btrfs_root"
-mkdir -p "$MNT_ROOT"
+DEV=$(findmnt -n -o SOURCE / | cut -d'[' -f1)
+MNT_ROOT="/run/btrfs_root"
 
-mount -o subvolid=5 $(findmnt -n -o SOURCE /) "$MNT_ROOT"
+mkdir -p "$MNT_ROOT"
+mount -o subvolid=5 "$DEV" "$MNT_ROOT"
 
 umount -l /home || true
 
@@ -16,4 +17,3 @@ btrfs subvolume snapshot "$MNT_ROOT/@snapshots/@home.pure_system" "$MNT_ROOT/@ho
 
 echo "Full rollback successful. Rebooting..."
 reboot
-
