@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -e
+
+mkdir -p /tmp/root
+mount -o subvolid=5 $(findmnt -n -o SOURCE /) /tmp/root
+
+umount -l /home || true
+
+btrfs subvolume delete /tmp/root/@
+btrfs subvolume snapshot /tmp/root/@snapshots/@.pure_system /tmp/root/@
+
+btrfs subvolume delete /tmp/root/@home
+btrfs subvolume snapshot /tmp/root/@snapshots/@home.pure_system /tmp/root/@home
+
+echo "Full rollback successful. Rebooting..."
+reboot

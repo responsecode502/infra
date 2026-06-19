@@ -47,7 +47,7 @@ def do_mounting_layout(ctx):
 @task(pre=[set_root_password])
 def install_base(ctx):
     log.info("[3] installing base", step="start")
-    BOOTSTRAP_PACKAGES = ["base-system", "btrfs-progs", "grub-x86_64-efi", "os-prober"]
+    BOOTSTRAP_PACKAGES = ["base-system", "btrfs-progs", "grub-x86_64-efi", "os-prober", "grub-btrfs", "grub-btrfs-runit"]
     bootstrap_commands = [
         f"mkdir -p {cfg.mnt}/var/db/xbps/keys",
         f"cp -R /var/db/xbps/keys/* {cfg.mnt}/var/db/xbps/keys/",
@@ -85,6 +85,11 @@ def do_chroot(ctx):
         pty=True,
         hide=cfg.hide_output
     )
+
+    log.info("deploying rollback script")
+    ctx.run(f"mkdir -p {cfg.mnt}/usr/bin")
+    ctx.run(f"cp -a system/usr/bin/rollback {cfg.mnt}/usr/bin/rollback")
+    ctx.run(f"chmod +x {cfg.mnt}/usr/bin/rollback")
 
     log.info("deploying fstab")
     fstab_src = Path(__file__).parent.resolve() / "system/etc/fstab"
