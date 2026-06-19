@@ -128,6 +128,7 @@ def do_chroot(ctx):
         f"mount -o subvolid=5 {cfg.root_pt} {btrfs_root_path}",
         f"btrfs subvolume snapshot -r {btrfs_root_path}/@ {btrfs_root_path}/@snapshots/@.pure_system",
         f"btrfs subvolume snapshot -r {btrfs_root_path}/@home {btrfs_root_path}/@snapshots/@home.pure_system",
+        f"chroot {cfg.mnt} grub-mkconfig -o /boot/grub/grub.cfg",
         f"umount {btrfs_root_path}",
         f"umount -R {cfg.mnt}"
     ]:
