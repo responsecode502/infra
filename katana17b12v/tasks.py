@@ -55,6 +55,7 @@ def install_base(ctx):
         "os-prober",
         "grub-btrfs"
     ]
+    
     for cmd in [
         f"mkdir -p {cfg.mnt}/var/db/xbps/keys",
         f"cp -R /var/db/xbps/keys/* {cfg.mnt}/var/db/xbps/keys/",
@@ -133,7 +134,6 @@ def do_chroot(ctx):
         f"umount -R {cfg.mnt}"
     ]:
         ctx.sudo(cmd, pty=True, hide=cfg.hide_output)
-        
     log.info("[4] chroot", step="finish")
 
 @task
