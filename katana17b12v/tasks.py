@@ -87,9 +87,9 @@ def do_chroot(ctx):
     )
 
     log.info("deploying rollback script")
-    ctx.run(f"mkdir -p {cfg.mnt}/usr/bin")
-    ctx.run(f"cp -a system/usr/bin/rollback {cfg.mnt}/usr/bin/rollback")
-    ctx.run(f"chmod +x {cfg.mnt}/usr/bin/rollback")
+    ctx.sudo(f"mkdir -p {cfg.mnt}/usr/bin")
+    ctx.sudo(f"cp -a system/usr/bin/rollback {cfg.mnt}/usr/bin/rollback")
+    ctx.sudo(f"chmod +x {cfg.mnt}/usr/bin/rollback")
 
     log.info("deploying fstab")
     fstab_src = Path(__file__).parent.resolve() / "system/etc/fstab"
