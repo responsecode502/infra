@@ -1,0 +1,19 @@
+[project]
+name = "katana17b12v"
+version = "0.0.0"
+requires-python = "==3.12.*"
+dependencies = [
+    "invoke==2.2.0",
+    "cryptography==44.0.1",
+    "python-dotenv==1.0.1",
+    "structlog==25.1.0",
+    "dynaconf>=3.2.13",
+]
+
+[tool.uv]
+managed = true
+package = false
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
