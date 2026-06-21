@@ -1,5 +1,5 @@
-efi_pt = "/dev/sda1"
-root_pt = "/dev/sda2"
+#efi_pt = "/dev/sda1"
+root_pt = "/dev/sda1"
 mnt = "/mnt"
 xbps_repo = "https://repo-default.voidlinux.org/current"
 hide_output = true

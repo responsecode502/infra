@@ -23,7 +23,7 @@ def set_root_password(ctx):
 def do_partitioning(ctx):
     log.info("[1] partitioning", step="start")
     ctx.sudo(f"mkfs.btrfs -f -L ROOT_PART {cfg.root_pt}", pty=True, hide=cfg.hide_output)
-    ctx.sudo(f"fatlabel {cfg.efi_pt} EFI_PART", pty=True, hide=cfg.hide_output)
+    #ctx.sudo(f"fatlabel {cfg.efi_pt} EFI_PART", pty=True, hide=cfg.hide_output)
     ctx.sudo(f"mount {cfg.root_pt} {cfg.mnt}", pty=True, hide=cfg.hide_output)
     log.info("subvolumes are being created")
     for subvolume in ["@", "@home", "@snapshots"]:
@@ -40,7 +40,7 @@ def do_mounting_layout(ctx):
         f"mkdir -p {cfg.mnt}/home {cfg.mnt}/.snapshots {cfg.mnt}/boot/efi {cfg.mnt}/mnt/btrfs-root",
         f"mount -o {options},subvol=@home {cfg.root_pt} {cfg.mnt}/home",
         f"mount -o {options},subvol=@snapshots {cfg.root_pt} {cfg.mnt}/.snapshots",
-        f"mount {cfg.efi_pt} {cfg.mnt}/boot/efi"
+        #f"mount {cfg.efi_pt} {cfg.mnt}/boot/efi"
     ]:
         ctx.sudo(cmd, pty=True, hide=cfg.hide_output)
     log.info("[2] mounting layout", step="finish") 
@@ -52,7 +52,7 @@ def install_base(ctx):
         "base-system",
         "btrfs-progs",
         #"grub-x86_64-efi",
-        "grub-i386-pc",
+        "grub",
         "os-prober",
         "grub-btrfs"
     ]
@@ -108,7 +108,7 @@ def do_chroot(ctx):
     for cmd in [ 
         f"bash -c 'echo \"GRUB_DISABLE_OS_PROBER=false\" >> /etc/default/grub'",
         #f"grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=void --recheck",
-        f"grub-install {cfg.efi_pt}",
+        f"grub-install /dev/sda",
         f"xbps-reconfigure -fa",
 
         "xbps-install -S --yes",

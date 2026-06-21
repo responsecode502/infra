@@ -17,6 +17,7 @@ umount -l /home || true
 "$BTRFS_BIN" subvolume delete "$MNT_ROOT/@home"
 "$BTRFS_BIN" subvolume snapshot "$MNT_ROOT/@snapshots/@home.pure_system" "$MNT_ROOT/@home"
 
-echo "Full rollback successful. Rebooting..."
-reboot
+grub-mkconfig -o /boot/grub/grub.cfg
+
+echo "Full rollback successful. Reboot your pc!"
 
