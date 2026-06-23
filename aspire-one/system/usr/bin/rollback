@@ -6,18 +6,15 @@ MNT_ROOT="/run/btrfs_root"
 mkdir -p "$MNT_ROOT"
 mount -o subvolid=5 "$DEV" "$MNT_ROOT"
 
-# Get current snapshot paths
 ROOT_PATH=$(btrfs subvolume show / | grep -Po '(?<=Path:\s).*')
 HOME_PATH=$(btrfs subvolume show /home | grep -Po '(?<=Path:\s).*')
 
 umount -l /home || true
 
-# Create new active subvolumes from current snapshots (safe method)
-btrfs subvolume snapshot "$MNT_ROOT/$ROOT_PATH" "$MNT_ROOT/@.new"
-btrfs subvolume snapshot "$MNT_ROOT/$HOME_PATH" "$MNT_ROOT/@home.new"
+btrfs subvolume delete "$MNT_ROOT/@"
+btrfs subvolume snapshot "$MNT_ROOT/$ROOT_PATH" "$MNT_ROOT/@"
 
-# Atomic swap
-mv "$MNT_ROOT/@.new" "$MNT_ROOT/@"
-mv "$MNT_ROOT/@home.new" "$MNT_ROOT/@home"
+btrfs subvolume delete "$MNT_ROOT/@home"
+btrfs subvolume snapshot "$MNT_ROOT/$HOME_PATH" "$MNT_ROOT/@home"
 
 echo "Rollback complete! Reboot."
